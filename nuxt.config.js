@@ -1,5 +1,5 @@
 const pkg = require('./package')
-
+require('dotenv').config()
 module.exports = {
   mode: 'spa',
 
@@ -22,7 +22,7 @@ module.exports = {
   /*
   ** Customize the progress-bar color
   */
-  loading: { color: '#fff' },
+  loading: { color: '#9ccc65', height:'10px' },
 
   /*
   ** Global CSS
@@ -38,7 +38,8 @@ module.exports = {
   ** Plugins to load before mounting the App
   */
   plugins: [
-    {src: '@/plugins/vue-material'}
+    {src: '@/plugins/vue-material'},
+    {src: '@/plugins/axios'}
   ],
 
   /*
@@ -52,7 +53,11 @@ module.exports = {
   ** Axios module configuration
   */
   axios: {
+    credentials: true
     // See https://github.com/nuxt-community/axios-module#options
+  },
+  env: {
+    NEWS_API_KEY:process.env.NEWS_API_KEY
   },
 
   /*
