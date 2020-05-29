@@ -10,8 +10,8 @@
 <script>
 export default {
   async asyncData({ app }) {
-    const topHeadline = await app.$axios.$get('https://newsapi.org/v2/top-headlines?country=jp')
-    console.log(topHeadline.articles)
+    const topHeadline = await app.$axios.$get('/api/top-headlines?country=jp')
+    // console.log(topHeadline.articles)
     return {
       topHeadline: topHeadline.articles
     }

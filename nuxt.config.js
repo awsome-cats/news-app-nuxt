@@ -47,14 +47,22 @@ module.exports = {
   */
   modules: [
     // Doc: https://github.com/nuxt-community/axios-module#usage
-    '@nuxtjs/axios'
+    '@nuxtjs/axios',
+    '@nuxtjs/proxy',
   ],
   /*
   ** Axios module configuration
   */
   axios: {
-    credentials: true
+    credentials: true,
+    proxy:true
     // See https://github.com/nuxt-community/axios-module#options
+  },
+  proxy: {
+    '/api/': {
+      target: 'https://newsapi.org/v2/',
+      pathRewrite: { '^/api/': ''}
+    }
   },
   env: {
     NEWS_API_KEY:process.env.NEWS_API_KEY
