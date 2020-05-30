@@ -62,10 +62,15 @@ module.exports = {
     '/api/': {
       target: 'https://newsapi.org/v2/',
       pathRewrite: { '^/api/': ''}
+    },
+    '/register/': {
+      target: 'https://identitytoolkit.googleapis.com/v1/accounts:signUp?key='+ process.env.FB_API_KEY,
+      pathRewrite: { '^/register/': ''}
     }
   },
   env: {
-    NEWS_API_KEY:process.env.NEWS_API_KEY
+    NEWS_API_KEY:process.env.NEWS_API_KEY,
+    FB_API_KEY:process.env.FB_API_KEY
   },
 
   /*

@@ -1,7 +1,9 @@
 export const state = () => ({
   headlines: [],
   category: '',
-  loading: false
+  loading: false,
+  country: 'jp',
+  token: ''
 })
 
 export const mutations = {
@@ -13,6 +15,12 @@ export const mutations = {
   },
   setLoading(state, loading) {
     state.loading = loading
+  },
+  setCountry(state, country) {
+    state.country = country
+  },
+  setToken(state, token) {
+    state.token = token
   }
 }
 
@@ -22,8 +30,17 @@ export const actions = {
     const { articles } = await this.$axios.$get(apiUrl)
     commit('setLoading', false)
     commit('setHeadlines', articles)
-    
-
+  },
+  async authenticateUser({ commit }, userPayload) {
+    try {
+      commit('setLoading', true)
+      const authUserData = await this.$axios.$post('/register/', userPayload)
+      commit('setToken', authUserData.idToken)
+      console.log(authUserData)
+    } catch(error) {
+      console.log(error)
+      commit('setLoading', false)
+    }
   }
 }
 
@@ -36,5 +53,11 @@ export const getters = {
   },
   category(state) {
     return state.category
+  },
+  country(state) {
+    return state.country
+  },
+  isAuthenticated(state) {
+    return !!state.token
   }
 }
