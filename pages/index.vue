@@ -2,7 +2,7 @@
   <div class="md-layout md-alignment-center" style="margin: 4em 0">
     <!-- Top Navbar Start -->
     <md-toolbar class="fixed-toolbar" elevation="1">
-      <md-button class="md-icon-button">
+      <md-button @click="showLeftSidePanel=true" class="md-icon-button">
         <md-icon>menu</md-icon>
       </md-button>
       <nuxt-link class="md-primary md-title" to="/">
@@ -11,14 +11,30 @@
       <div class="md-toolbar-section-end">
         <md-button @click="$router.push('/login')">Login</md-button>
         <md-button @click="$router.push('/register')">Register</md-button>
-        <md-button @click="showSidePanel = true">
+        <md-button @click="showRightSidePanel = true">
           Category
         </md-button>
       </div>
     </md-toolbar>
     <!-- Top Navbar End-->
+
+    <!-- personal News Feed (left drawer) -->
+    <md-drawer md-fixed :md-active.sync="showLeftSidePanel">
+      <md-toolbar md-title>Personal Feed</md-toolbar>
+      <md-progress-bar v-if="loading" md-mode="indeterminate"></md-progress-bar>
+      <md-field>
+        <label for="country">Country</label>
+        <md-select name="country" :value="country" id="country" @input="changeCountry">
+          <md-option value="jp">日本</md-option>
+          <md-option value="us">アメリカ</md-option>
+          <md-option value="de">カナダ</md-option>
+          <md-option value="ca">ドイツ</md-option>
+        </md-select>
+      </md-field>
+    </md-drawer>
+
     <!-- News Categories (Right Drawer) Start -->
-    <md-drawer class="md-right" md-fixed :md-active.sync="showSidePanel">
+    <md-drawer class="md-right" md-fixed :md-active.sync="showRightSidePanel">
       <md-toolbar :md-elevation="1">
         <span class="md-title">News Categories</span>
       </md-toolbar>
@@ -88,7 +104,8 @@
 export default {
   data() {
     return {
-      showSidePanel: false,
+      showRightSidePanel: false,
+      showLeftSidePanel: false,
       newsCategories: [
         { name: 'トップヘッドライン', path: '', icon: 'today'},
         { name: 'テクノロジー', path: 'technology', icon: 'keyboard'},
@@ -103,7 +120,10 @@ export default {
   methods: {
     async loadCategory(category) {
       this.$store.commit('setCategory', category)
-      await this.$store.dispatch('loadHeadlines',`/api/top-headlines?country=jp&category=${this.category}`)
+      await this.$store.dispatch('loadHeadlines',`/api/top-headlines?country=${this.country}&category=${this.category}`)
+    },
+    changeCountry(country) {
+      this.$store.commit('setCountry', country)
     }
   },
   computed: {
@@ -115,6 +135,9 @@ export default {
     },
     loading() {
       return this.$store.getters.loading
+    },
+    country () {
+      return this.$store.getters.country
     }
   },
   // async asyncData({ app }) {
@@ -125,7 +148,12 @@ export default {
   //   }
   // }
   async fetch({ store }) {
-    await store.dispatch('loadHeadlines', `/api/top-headlines?country=jp&category=${store.state.category}`)
+    await store.dispatch('loadHeadlines', `/api/top-headlines?country=${store.state.country}&category=${store.state.category}`)
+  },
+  watch: {
+    async country() {
+      await this.$store.dispatch('loadHeadlines', `/api/top-headlines?country=${this.country}&category=${this.category}`)
+    }
   }
 }
 </script>
