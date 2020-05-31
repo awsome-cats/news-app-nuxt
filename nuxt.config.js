@@ -39,7 +39,8 @@ module.exports = {
   */
   plugins: [
     {src: '@/plugins/vue-material'},
-    {src: '@/plugins/axios'}
+    {src: '@/plugins/axios'},
+    {src: '@/plugins/firestore'}
   ],
 
   /*
@@ -66,6 +67,10 @@ module.exports = {
     '/register/': {
       target: 'https://identitytoolkit.googleapis.com/v1/accounts:signUp?key='+ process.env.FB_API_KEY,
       pathRewrite: { '^/register/': ''}
+    },
+    '/login/': {
+      target: 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=' + process.env.FB_API_KEY,
+      pathRewrite: { '^/login/': ''}
     }
   },
   env: {

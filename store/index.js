@@ -1,5 +1,5 @@
 import md5 from 'md5'
-
+import db from '@/plugins/firestore'
 export const state = () => ({
   headlines: [],
   category: '',
@@ -40,9 +40,24 @@ export const actions = {
   async authenticateUser({ commit }, userPayload) {
     try {
       commit('setLoading', true)
-      const authUserData = await this.$axios.$post('/register/', userPayload)
-      const avatar = `http://gravatar.com/avatar/${md5(authUserData.email)}?d=identicon`
-      const user = { email: authUserData.email, avatar}
+      const authUserData = await this.$axios.$post(`/${userPayload.action}/`, {
+        email: userPayload.email,
+        password: userPayload.password,
+        returnSecureToken: userPayload.returnSecureToken
+      })
+
+      let user
+
+      if(userPayload.action === 'register') {
+        const avatar = `http://gravatar.com/avatar/${md5(authUserData.email)}?d=identicon`
+        user = { email: authUserData.email, avatar}
+        await db.collection('user').doc(userPayload.email).set(user)
+      } else {
+        const loginRef = db.collection('user').doc(userPayload.email)
+        const loggedInUser = await loginRef.get()
+        user = loggedInUser.data()
+      }
+      
       commit('setUser', user)
       commit('setToken', authUserData.idToken)
       console.log(authUserData)

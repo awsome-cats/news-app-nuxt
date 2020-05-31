@@ -24,12 +24,12 @@
           </md-field>
         </md-card-content>
         <md-card-actions>
-          <md-button>ログイン</md-button>
+          <md-button @click="$router.push('/login')">ログイン</md-button>
           <md-button :disabled="loading" class="md-primary md-raised" type="submit">送信</md-button>
         </md-card-actions>
       </form>
 
-      <md-snackbar :md-active.sync="isAuthenticated">{{form.email}}が登録されました。</md-snackbar>
+      <md-snackbar :md-active.sync="isAuthenticated">{{form.email}}が登録されました</md-snackbar>
     </md-card>
   </div>
 </template>
@@ -87,6 +87,7 @@ export default {
     },
     async registerUser() {
       await this.$store.dispatch('authenticateUser', {
+          action:'register',
           email: this.form.email,
           password: this.form.password,
           returnSecureToken: true
