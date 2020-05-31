@@ -17,7 +17,7 @@
             </md-avatar>
             {{user.email}}
           </md-button>
-          <md-button>ログアウト</md-button>
+          <md-button @click="logoutUser">ログアウト</md-button>
         </template>
         <template v-else>
           <md-button @click="$router.push('/login')">Login</md-button>
@@ -137,6 +137,9 @@ export default {
     },
     changeCountry(country) {
       this.$store.commit('setCountry', country)
+    },
+    logoutUser() {
+      this.$store.dispatch('logoutUser')
     }
   },
   computed: {
@@ -159,13 +162,7 @@ export default {
       return this.$store.getters.isAuthenticated
     }
   },
-  // async asyncData({ app }) {
-  //   const topHeadline = await app.$axios.$get('/api/top-headlines?country=jp')
-  //   console.log(topHeadline)
-  //   return {
-  //     topHeadline: topHeadline.articles
-  //   }
-  // }
+  
   async fetch({ store }) {
     await store.dispatch('loadHeadlines', `/api/top-headlines?country=${store.state.country}&category=${store.state.category}`)
   },
