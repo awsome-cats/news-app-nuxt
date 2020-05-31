@@ -1,5 +1,7 @@
 import md5 from 'md5'
 import db from '@/plugins/firestore'
+import { saveUserData, clearUserData } from '@/utils'
+
 export const state = () => ({
   headlines: [],
   category: '',
@@ -27,6 +29,12 @@ export const mutations = {
   },
   setUser(state, user) {
     state.user = user
+  },
+  clearToken(state) {
+    state.token = ''
+  },
+  clearUser(state) {
+    state.user = null
   }
 }
 
@@ -60,11 +68,23 @@ export const actions = {
       
       commit('setUser', user)
       commit('setToken', authUserData.idToken)
+      commit('setLoading', false)
       console.log(authUserData)
+      // Cookie & localStorage
+      saveUserData(authUserData, user)
+      
     } catch(error) {
       console.log(error)
       commit('setLoading', false)
     }
+  },
+  setLogoutTimer(context, interval) {
+    setTimeout(() => context.dispatch('logoutUser'), interval)
+  },
+  logoutUser(context) {
+    context.commit('clearToken')
+    context.commit('clearUser')
+    clearUserData()
   }
 }
 
