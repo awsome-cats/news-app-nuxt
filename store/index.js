@@ -1,9 +1,11 @@
 import md5 from 'md5'
 import db from '@/plugins/firestore'
+export const strict = false
 import { saveUserData, clearUserData } from '@/utils'
 
 export const state = () => ({
   headlines: [],
+  feed: [],
   category: '',
   loading: false,
   country: 'jp',
@@ -35,6 +37,12 @@ export const mutations = {
   },
   clearUser(state) {
     state.user = null
+  },
+  setFeed(state, headlines) {
+    state.feed = headlines
+  },
+  clearFeed(state) {
+    state.feed = []
   }
 }
 
@@ -44,6 +52,32 @@ export const actions = {
     const { articles } = await this.$axios.$get(apiUrl)
     commit('setLoading', false)
     commit('setHeadlines', articles)
+  },
+  async addHeadlineToFeed({state}, headline) {
+    const feedRef = db.collection(`users/${state.user.email}/feed`).doc(headline.title)
+    await feedRef.set(headline)
+  },
+  async removeHeadlineFromFeed({state}, headline) {
+    const headlineRef = db.collection(`users/${state.user.email}/feed`).doc(headline.title)
+    await headlineRef.delete()
+  },
+  async loadUserFeed({state, commit}) {
+    if(state.user) {
+      const feedRef = db.collection(`users/${state.user.email}/feed`)
+      
+      await feedRef.onSnapshot(querySnapshot => {
+      let headlines = []
+      querySnapshot.forEach(doc => {
+        headlines.push(doc.data())
+        commit('setFeed', headlines)
+      })
+      // feedを空にしたい時
+      if (querySnapshot.empty) {
+        headlines = []
+        commit('setFeed', headlines)
+      }
+    })
+    }
   },
   async authenticateUser({ commit }, userPayload) {
     try {
@@ -59,9 +93,9 @@ export const actions = {
       if(userPayload.action === 'register') {
         const avatar = `http://gravatar.com/avatar/${md5(authUserData.email)}?d=identicon`
         user = { email: authUserData.email, avatar}
-        await db.collection('user').doc(userPayload.email).set(user)
+        await db.collection('users').doc(userPayload.email).set(user)
       } else {
-        const loginRef = db.collection('user').doc(userPayload.email)
+        const loginRef = db.collection('users').doc(userPayload.email)
         const loggedInUser = await loginRef.get()
         user = loggedInUser.data()
       }
@@ -84,6 +118,7 @@ export const actions = {
   logoutUser(context) {
     context.commit('clearToken')
     context.commit('clearUser')
+    context.commit('clearFeed')
     clearUserData()
   }
 }
@@ -93,6 +128,9 @@ export const actions = {
 export const getters = {
   headlines(state) {
     return state.headlines
+  },
+  feed(state) {
+    return state.feed
   },
   loading(state) {
     return state.loading
