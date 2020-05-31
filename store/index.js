@@ -1,9 +1,12 @@
+import md5 from 'md5'
+
 export const state = () => ({
   headlines: [],
   category: '',
   loading: false,
   country: 'jp',
-  token: ''
+  token: '',
+  user: null
 })
 
 export const mutations = {
@@ -21,6 +24,9 @@ export const mutations = {
   },
   setToken(state, token) {
     state.token = token
+  },
+  setUser(state, user) {
+    state.user = user
   }
 }
 
@@ -35,6 +41,9 @@ export const actions = {
     try {
       commit('setLoading', true)
       const authUserData = await this.$axios.$post('/register/', userPayload)
+      const avatar = `http://gravatar.com/avatar/${md5(authUserData.email)}?d=identicon`
+      const user = { email: authUserData.email, avatar}
+      commit('setUser', user)
       commit('setToken', authUserData.idToken)
       console.log(authUserData)
     } catch(error) {
@@ -43,6 +52,8 @@ export const actions = {
     }
   }
 }
+
+
 
 export const getters = {
   headlines(state) {
@@ -59,5 +70,8 @@ export const getters = {
   },
   isAuthenticated(state) {
     return !!state.token
+  },
+  user(state) {
+    return state.user
   }
 }

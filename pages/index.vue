@@ -9,8 +9,21 @@
       Nuxt News
       </nuxt-link>
       <div class="md-toolbar-section-end">
-        <md-button @click="$router.push('/login')">Login</md-button>
-        <md-button @click="$router.push('/register')">Register</md-button>
+        <!-- Avatar Image -->
+        <template v-if="isAuthenticated">
+          <md-button>
+            <md-avatar>
+              <img :src="user.avatar" :alt="user.email" />
+            </md-avatar>
+            {{user.email}}
+          </md-button>
+          <md-button>ログアウト</md-button>
+        </template>
+        <template v-else>
+          <md-button @click="$router.push('/login')">Login</md-button>
+          <md-button @click="$router.push('/register')">Register</md-button>
+        </template>
+        
         <md-button @click="showRightSidePanel = true">
           Category
         </md-button>
@@ -18,7 +31,7 @@
     </md-toolbar>
     <!-- Top Navbar End-->
 
-    <!-- personal News Feed (left drawer) -->
+    <!-- Personal News Feed (left drawer) -->
     <md-drawer md-fixed :md-active.sync="showLeftSidePanel">
       <md-toolbar md-title>Personal Feed</md-toolbar>
       <md-progress-bar v-if="loading" md-mode="indeterminate"></md-progress-bar>
@@ -38,10 +51,10 @@
       <md-toolbar :md-elevation="1">
         <span class="md-title">News Categories</span>
       </md-toolbar>
-      <!-- progress bar -->
+      <!-- Progress bar -->
       <md-progress-bar v-if="loading" md-mode="indeterminate"></md-progress-bar>
       
-      <!-- list in Drawer Start -->
+      <!-- List in Drawer Start -->
       <md-list>
         <md-subheader class="md-primary">Categories</md-subheader>
         <md-list-item v-for="(newsCategory, i) in newsCategories" :key="i" @click="loadCategory(newsCategory.path)">
@@ -138,6 +151,12 @@ export default {
     },
     country () {
       return this.$store.getters.country
+    },
+    user() {
+      return this.$store.getters.user
+    },
+    isAuthenticated() {
+      return this.$store.getters.isAuthenticated
     }
   },
   // async asyncData({ app }) {
