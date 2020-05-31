@@ -142,7 +142,9 @@
               <md-button @click="addHeadLineToFeed(headline)" :class="isInFeed(headline.title)" class="md-icon-button">
                 <md-icon>bookmark</md-icon>
               </md-button>
-              <md-button class="md-icon-button">
+              <md-button
+              @click="saveHeadline(headline)" 
+              class="md-icon-button">
                 <md-icon>message</md-icon>
               </md-button>
             </md-card-actions>
@@ -191,6 +193,13 @@ export default {
     isInFeed(title) {
       const inFeed = this.feed.findIndex(headline => headline.title === title) > -1
       return inFeed ? 'md-primary': ''
+    },
+    async saveHeadline(headline) {
+      await this.$store.dispatch('saveHeadline', headline)
+      .then(() => {
+        this.$router.push(`/headlines/${headline.slug}`)
+      })
+      
     },
     changeCountry(country) {
       this.$store.commit('setCountry', country)

@@ -1,5 +1,6 @@
 import md5 from 'md5'
 import db from '@/plugins/firestore'
+import slugify from 'slugify'
 export const strict = false
 import { saveUserData, clearUserData } from '@/utils'
 
@@ -10,7 +11,8 @@ export const state = () => ({
   loading: false,
   country: 'jp',
   token: '',
-  user: null
+  user: null,
+  headline: null
 })
 
 export const mutations = {
@@ -43,6 +45,9 @@ export const mutations = {
   },
   clearFeed(state) {
     state.feed = []
+  },
+  setHeadline(state, headline) {
+    state.headline = headline
   }
 }
 
@@ -50,12 +55,42 @@ export const actions = {
   async loadHeadlines({ commit },apiUrl) {
     commit('setLoading', true)
     const { articles } = await this.$axios.$get(apiUrl)
+    const headlines = articles.map(article => {
+      const slug = slugify(article.title, {
+        replacement: '-',
+        remove: /[^a-zA-Z0-9 -]/g,
+        lower: true
+      })
+      const headline = { ...article, slug}
+      return headline
+    })
     commit('setLoading', false)
-    commit('setHeadlines', articles)
+    commit('setHeadlines', headlines)
   },
   async addHeadlineToFeed({state}, headline) {
     const feedRef = db.collection(`users/${state.user.email}/feed`).doc(headline.title)
     await feedRef.set(headline)
+  },
+  async saveHeadline(context, headline) {
+    const headlineRef = db.collection('headlines').doc(headline.slug)
+    let headlineId;
+    await headlineRef.get().then(doc => {
+      if (doc.exists) {
+        headlineId = doc.id
+      }
+    })
+    if (!headlineId) {
+      await headlineRef.set(headline)
+    } 
+  },
+  async loadHeadline({ commit }, headlineSlug) {
+    const headlineRef = db.collection('headlines').doc(headlineSlug)
+    await headlineRef.get().then((doc) => {
+      if (doc.exists) {
+        const headline = doc.data()
+        commit('setHeadline', headline)
+      }
+    })
   },
   async removeHeadlineFromFeed({state}, headline) {
     const headlineRef = db.collection(`users/${state.user.email}/feed`).doc(headline.title)
@@ -146,5 +181,8 @@ export const getters = {
   },
   user(state) {
     return state.user
+  },
+  headline(state) {
+    return state.headline
   }
 }
