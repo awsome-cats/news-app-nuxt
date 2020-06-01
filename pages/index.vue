@@ -111,7 +111,7 @@
     <!-- News Categories (Right Drawer) End -->
     
     <div class="md-layout-item md-size-95">
-      <md-content class="md-layout md-gutter" style="background:#007998; padding: 1em;">
+      <md-content class="md-layout md-gutter" style="background:#ddd; padding: 1em;">
         <!-- v-for -->
         <ul v-for="headline in headlines" :key="headline.id" class="md-layout-item md-large-size-25 md-medium-size-33 md-small-size-50 md-xsmall-size-100">
           <md-card style="margin-top: 1em;" md-with-hover>

@@ -114,6 +114,20 @@ export const actions = {
     })
     }
   },
+  async sendComment({state, commit}, comment) {
+    const commentRef = db.collection(`headlines/${state.headline.slug}/comments`)
+    commit('setLoading', true)
+    await commentRef.doc(comment.id).set(comment)
+    await commentRef.get().then(querySnapshot => {
+      let comments = []
+      querySnapshot.forEach(doc => {
+        comments.push(doc.data)
+        const updateHeadline = { ...state.headline, comments}
+        commit('setHeadline', updateHeadline)
+      })
+    })
+    commit('setLoading', false)
+  },
   async authenticateUser({ commit }, userPayload) {
     try {
       commit('setLoading', true)
