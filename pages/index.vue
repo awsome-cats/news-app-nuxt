@@ -23,13 +23,57 @@
           <md-button @click="$router.push('/login')">Login</md-button>
           <md-button @click="$router.push('/register')">Register</md-button>
         </template>
-        
-        <md-button @click="showRightSidePanel = true">
+        <md-button class="md-primary" 
+        @click="showSearchDialog = true"
+        >Search</md-button>
+        <md-button @click="showRightSidePanel=true">
           Category
         </md-button>
       </div>
     </md-toolbar>
     <!-- Top Navbar End-->
+    <!-- Search Dialog -->
+    <!-- ここから -->
+    <md-dialog :md-active.sync="showSearchDialog">
+      <md-dialog-title>検索する</md-dialog-title>
+      <div class="md-layout" style="padding: 1em;">
+        <md-field>
+          <label>検索用語</label>
+          <md-input v-model="query" 
+          placeholder="完全に一致する場合は引用符を使用し、複数の用語にはAND/OR/NOTを使用します"
+          max-length="30"
+          >
+        </md-input>
+        </md-field>
+        <md-datepicker 
+          v-model="fromDate" 
+          md-immediately>
+          <label>開始日を選ぶ</label>
+        </md-datepicker>
+        <md-datepicker 
+          v-model="toDate" 
+          md-immediately>
+          <label>終了日を選ぶ</label>
+        </md-datepicker>
+        <md-field>
+          <label for="sortBy">条件で検索結果を並べ替える</label>
+          <md-select v-model="sortBy"
+          name="sortBy"
+          id="sortBy"
+          md-dense
+          >
+            <md-option value="publishedAt">新着</md-option>
+            <md-option value="relevancy">関連</md-option>
+            <md-option value="popularity">人気</md-option>
+
+          </md-select>
+        </md-field>
+      </div>
+      <md-dialog-actions>
+        <md-button class="md-accent" @click="showSearchDialog=false">Cancel</md-button>
+        <md-button class="md-primary" @click="searchHeadlines">検索</md-button>
+      </md-dialog-actions>
+    </md-dialog>
 
     <!-- Personal News Feed (left drawer) -->
     <md-drawer md-fixed :md-active.sync="showLeftSidePanel">
@@ -126,7 +170,7 @@
                   {{ headline.title }}
                 </a>
               </div>
-              <div>
+              <div @click="loadSource(headline.source.id)">
                 {{ headline.source.name }}
                 <md-icon class="small-icon">book</md-icon>
               </div>
@@ -166,6 +210,7 @@ export default {
     return {
       showRightSidePanel: false,
       showLeftSidePanel: false,
+      showSearchDialog: false,
       newsCategories: [
         { name: 'トップヘッドライン', path: '', icon: 'today'},
         { name: 'テクノロジー', path: 'technology', icon: 'keyboard'},
@@ -174,7 +219,11 @@ export default {
         { name: 'ヘルス', path: 'health', icon: 'fastfood'},
         { name: 'サイエンス', path: 'science', icon: 'fingerprint'},
         { name: 'スポーツ', path: 'sports', icon: 'golf_course'}
-      ]
+      ],
+      query: '',
+      fromDate: '',
+      toDate: '',
+      sortBy: ''
     }
   },
   methods: {
@@ -201,11 +250,26 @@ export default {
       })
       
     },
+    async loadSource(sourceId){
+      if(sourceId) {
+        this.$store.commit('setSource', sourceId)
+        await this.$store.dispatch('loadHeadlines', `/api/top-headlines?sources=${this.source}`)
+      }
+    },
     changeCountry(country) {
       this.$store.commit('setCountry', country)
     },
     logoutUser() {
       this.$store.dispatch('logoutUser')
+    },
+    async searchHeadlines() {
+      await this.$store.dispatch('loadHeadlines', `/api/everything?q=${this.query}&from=${this.dateToISOString(this.fromDate)}&to=${this.dateToISOString(this.toDate)}&sortBy=${this.sortBy}`)
+      this.showSearchDialog = false
+    },
+    dateToISOString(date) {
+      if(date) {
+        return new Date(date).toISOString()
+      }
     }
   },
   computed: {
@@ -229,9 +293,15 @@ export default {
     },
     isAuthenticated() {
       return this.$store.getters.isAuthenticated
+    },
+    source() {
+      return this.$store.getters.source
     }
   },
-  
+  /*全データ取得
+  * loadHeadlines: in store
+  */
+
   async fetch({ store }) {
     await store.dispatch('loadHeadlines', `/api/top-headlines?country=${store.state.country}&category=${store.state.category}`)
     await store.dispatch('loadUserFeed')

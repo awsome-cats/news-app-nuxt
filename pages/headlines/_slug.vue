@@ -1,5 +1,5 @@
 <template>
-  <div class="md-layout md-alignment-center" style="margin: 5em 0">
+  <div class="md-layout md-alignment-center" style="margin: 5em 0;">
     <div class="md-layout-item md-size-75 md-small-size-80 md-xsmall-size-100">
       <md-card >
         <md-card-media style="height: 300px;" md-ratio="16:9">
@@ -13,7 +13,7 @@
             {{headline.source.name}}
             <md-icon>book</md-icon>
           </div>
-          <span class="md-subhead">
+          <span class="md-subhead" v-if="headline.author">
             {{headline.author}}
             <md-icon>face</md-icon>
           </span>
@@ -22,7 +22,7 @@
       </md-card>
     
     <!-- comment form -->
-    <form @submit.prevent="sendComment">
+    <form @submit.prevent="sendComment" >
       <md-field>
         <label>コメントを書いてみましょう</label>
         <!-- Not User & loading is true -->
@@ -32,6 +32,28 @@
       </md-field>
       <md-button class="md-primary md-raised" type="submit" :disabled="loading || !user">コメントを送信する</md-button>
     </form>
+
+    <!-- comments -->
+    <md-list class="md-triple-line" style="margin-top: 1em;">
+      <md-list-item v-for="comment in headline.comments" :key="comment.id">
+        <md-avatar>
+          <img :src="comment.user.avatar" :alt="comment.user.username" />
+        </md-avatar>
+        <div class="md-list-item-text">
+          <span>{{ comment.user.username }}</span>
+          <span>{{ comment.publishedAt }}</span>
+          <p>{{ comment.text }}</p>
+        </div>
+
+        <md-badge class="md-primary" md-position="bottom"
+        :md-content="comment.likes"
+        />
+          <md-button @click="likeComment(comment.id)" class="md-icon-button" :disabled="loading || !user">
+            <md-icon>thumb_up</md-icon>
+          </md-button>
+        
+      </md-list-item>
+    </md-list>
     <!-- back button -->
     <md-button 
     class="md-fab md-fab-bottom-right md-fixed md-primary"
@@ -71,10 +93,14 @@ export default {
     },
     getCommentUserData() {
       const commentUserData = { ...this.user};
-      console.log('commentUserData',commentUserData)
+      // console.log('commentUserData',commentUserData)
+      // userからusernameを作成
       commentUserData['username'] = commentUserData['email'].split('@')[0]
-      console.log('commentUserData',commentUserData)
+      console.log('commentUserData2',commentUserData)
       return commentUserData
+    },
+    async likeComment(commentId) {
+      await this.$store.dispatch('likeComment', commentId)
     }
   },
   computed: {
