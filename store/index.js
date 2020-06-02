@@ -12,7 +12,8 @@ export const state = () => ({
   country: 'jp',
   token: '',
   user: null,
-  headline: null
+  headline: null,
+  source: ''
 })
 
 export const mutations = {
@@ -48,9 +49,22 @@ export const mutations = {
   },
   setHeadline(state, headline) {
     state.headline = headline
+  },
+  setSource(state,source) {
+    state.source = source
   }
 }
 
+
+/**
+ * actions
+ * 
+ * loadHeadlines: 全データ取得
+ * headlines: single headlineにslugifyを当てる
+ * saveHeadline: headlinesからsingle headlineのタイトルを取得してサブコレクションにセット
+ * addHeadlineToFeed: user配下にお気に入りをセット(users/email/feed/渡されたheadline)
+ * loadHeadline: each single headlineを取得と同時にコメントも取得する
+ */
 export const actions = {
   async loadHeadlines({ commit },apiUrl) {
     commit('setLoading', true)
@@ -59,6 +73,7 @@ export const actions = {
       const slug = slugify(article.title, {
         replacement: '-',
         remove: /[^a-zA-Z0-9 -]/g,
+        // remove: undefined,
         lower: true
       })
       const headline = { ...article, slug}
@@ -66,10 +81,6 @@ export const actions = {
     })
     commit('setLoading', false)
     commit('setHeadlines', headlines)
-  },
-  async addHeadlineToFeed({state}, headline) {
-    const feedRef = db.collection(`users/${state.user.email}/feed`).doc(headline.title)
-    await feedRef.set(headline)
   },
   async saveHeadline(context, headline) {
     const headlineRef = db.collection('headlines').doc(headline.slug)
@@ -83,22 +94,50 @@ export const actions = {
       await headlineRef.set(headline)
     } 
   },
+  async addHeadlineToFeed({state}, headline) {
+    const feedRef = db.collection(`users/${ state.user.email }/feed`).doc(headline.title)
+    // .orderBy('title', 'desc')
+    await feedRef.set(headline)
+  },
+  
   async loadHeadline({ commit }, headlineSlug) {
+    // get single headline
     const headlineRef = db.collection('headlines').doc(headlineSlug)
-    await headlineRef.get().then((doc) => {
+    // get comment of single headline
+    const commentsRef = db.collection(`headlines/${ headlineSlug }/comments`).orderBy('likes', 'desc')
+
+    let loadedHeadline = {}
+    await headlineRef.get().then(async doc => {
+      
+      // doc.dataを空のloadedHeadlineに格納
       if (doc.exists) {
-        const headline = doc.data()
-        commit('setHeadline', headline)
+        loadedHeadline = doc.data()
+        //　オブジェクトかどうか確認
+        // console.log('loadedHeadline', loadedHeadline)
+
+        // コメントのスナップショットを取得
+        await commentsRef.get().then(querySnapshot => {
+          if(querySnapshot.empty) {
+            commit('setHeadline', loadedHeadline)
+          }
+          let loadedComments = []
+          querySnapshot.forEach(doc => {
+            loadedComments.push(doc.data())
+            loadedHeadline['comments'] = loadedComments
+            commit('setHeadline', loadedHeadline)
+          })
+          
+        })
       }
     })
   },
   async removeHeadlineFromFeed({state}, headline) {
-    const headlineRef = db.collection(`users/${state.user.email}/feed`).doc(headline.title)
+    const headlineRef = db.collection(`users/${ state.user.email }/feed`).doc(headline.title)
     await headlineRef.delete()
   },
   async loadUserFeed({state, commit}) {
     if(state.user) {
-      const feedRef = db.collection(`users/${state.user.email}/feed`)
+      const feedRef = db.collection(`users/${ state.user.email }/feed`)
       
       await feedRef.onSnapshot(querySnapshot => {
       let headlines = []
@@ -115,23 +154,52 @@ export const actions = {
     }
   },
   async sendComment({state, commit}, comment) {
-    const commentRef = db.collection(`headlines/${state.headline.slug}/comments`)
+    // commentを追加する場所を決定
+    const commentsRef = db.collection(`headlines/${ state.headline.slug }/comments`)
     commit('setLoading', true)
-    await commentRef.doc(comment.id).set(comment)
-    await commentRef.get().then(querySnapshot => {
+    // commentを追加
+    await commentsRef.doc(comment.id).set(comment)
+    await commentsRef.orderBy('likes', 'desc').get().then(querySnapshot => {
       let comments = []
       querySnapshot.forEach(doc => {
-        comments.push(doc.data)
-        const updateHeadline = { ...state.headline, comments}
-        commit('setHeadline', updateHeadline)
+        comments.push(doc.data())
+        const updatedHeadline = { ...state.headline, comments}
+        commit('setHeadline', updatedHeadline)
       })
     })
     commit('setLoading', false)
   },
+  async likeComment({ state, commit }, commentId) {
+    const commentsRef = db.collection(`headlines/${ state.headline.slug }/comments`)
+    .orderBy('likes', 'desc')
+    const likedCommentRef = db.collection('headlines').doc(state.headline.slug)
+    .collection('comments').doc(commentId)
+
+    await likedCommentRef.get().then(doc => {
+      if(doc.exists) {
+        const prevLikes = doc.data().likes
+        const currentLikes = prevLikes + 1
+        likedCommentRef.update({
+          likes:currentLikes
+        })
+      }
+    })
+    await commentsRef.onSnapshot(querySnapshot => {
+      let loadedComments = []
+      querySnapshot.forEach(doc => {
+        loadedComments.push(doc.data())
+        const updatedHeadline = {
+          ...state.headline,
+          comments: loadedComments
+        }
+        commit('setHeadline', updatedHeadline)
+      })
+    })
+  },
   async authenticateUser({ commit }, userPayload) {
     try {
       commit('setLoading', true)
-      const authUserData = await this.$axios.$post(`/${userPayload.action}/`, {
+      const authUserData = await this.$axios.$post(`/${ userPayload.action }/`, {
         email: userPayload.email,
         password: userPayload.password,
         returnSecureToken: userPayload.returnSecureToken
@@ -140,7 +208,7 @@ export const actions = {
       let user
 
       if(userPayload.action === 'register') {
-        const avatar = `http://gravatar.com/avatar/${md5(authUserData.email)}?d=identicon`
+        const avatar = `http://gravatar.com/avatar/${ md5(authUserData.email) }?d=identicon`
         user = { email: authUserData.email, avatar}
         await db.collection('users').doc(userPayload.email).set(user)
       } else {
@@ -152,7 +220,7 @@ export const actions = {
       commit('setUser', user)
       commit('setToken', authUserData.idToken)
       commit('setLoading', false)
-      console.log(authUserData)
+      // console.log(authUserData)
       // Cookie & localStorage
       saveUserData(authUserData, user)
       
@@ -198,5 +266,8 @@ export const getters = {
   },
   headline(state) {
     return state.headline
+  },
+  source (state) {
+    return state.source
   }
 }
