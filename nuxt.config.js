@@ -25,7 +25,7 @@ module.exports = {
   /*
   ** Customize the progress-bar color
   */
-  loading: { color: '#9ccc65', height:'10px' },
+  loading: { color: '#9ccc65', height:'3px' },
 
   /*
   ** Global CSS
@@ -43,7 +43,8 @@ module.exports = {
   plugins: [
     {src: '@/plugins/vue-material'},
     {src: '@/plugins/axios'},
-    {src: '@/plugins/firestore'}
+    {src: '@/plugins/firestore'},
+    {src: '@/plugins/time-filters'}
   ],
 
   /*

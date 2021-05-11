@@ -17,6 +17,8 @@
             </md-avatar>
             {{user.email}}
           </md-button>
+          <!-- このままだとuser以外がアクセス出来るので -->
+          <md-button @click="$router.push(`/auth/${user.email}`)">マイページ</md-button>
           <md-button @click="logoutUser">ログアウト</md-button>
         </template>
         <template v-else>
@@ -121,7 +123,7 @@
         <div class="md-list-item-text">
           <span><a :href="headline.url" target="_blank">{{headline.title}}</a></span>
           <span>{{headline.source.name}}</span>
-          <span>View Comments</span>
+          <span @click="saveHeadline(headline)">View Comments</span>
         </div>
         <md-button 
         @click="removeHeadlineFromFeed(headline)"
@@ -175,10 +177,14 @@
                 <md-icon class="small-icon">book</md-icon>
               </div>
               
+              <div class="md-subhead" v-if="headline.author">
+                {{ headline.author}}
+                <md-icon class="small-icon">face</md-icon>
+              </div>
               <div class="md-subhead">
-                  {{ headline.author}}
-                  <md-icon class="small-icon">alarm</md-icon>
-                </div>
+                {{ headline.publishedAt | publishedTimeToNow}}
+                <md-icon class="small-icon">alarm</md-icon>
+              </div>
             </md-card-header>
             
             <md-card-content>{{ headline.description }}</md-card-content>
@@ -204,8 +210,10 @@
 </template>
 
 <script>
-
+import { mapGetters } from 'vuex'
 export default {
+  // middleware: 'user',
+  
   data() {
     return {
       showRightSidePanel: false,
@@ -273,6 +281,7 @@ export default {
     }
   },
   computed: {
+   
     headlines() {
       return this.$store.getters.headlines
     },
@@ -289,7 +298,12 @@ export default {
       return this.$store.getters.country
     },
     user() {
+      console.log('user', this.$store.getters.user)
       return this.$store.getters.user
+    },
+    login_user() {
+      console.log('login_user', this.$store.getters.login_user)
+      return this.$store.getters.login_user
     },
     isAuthenticated() {
       return this.$store.getters.isAuthenticated

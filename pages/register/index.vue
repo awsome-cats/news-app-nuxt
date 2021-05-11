@@ -31,6 +31,12 @@
 
       <md-snackbar :md-active.sync="isAuthenticated">{{form.email}}が登録されました</md-snackbar>
     </md-card>
+    <md-button 
+    class="md-fab md-fab-bottom-right md-fixed md-primary"
+    @click="$router.go(-1)"
+    >
+    <md-icon>arrow_back</md-icon>
+    </md-button>
   </div>
 </template>
 

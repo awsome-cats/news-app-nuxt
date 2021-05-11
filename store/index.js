@@ -3,6 +3,7 @@ import db from '@/plugins/firestore'
 import slugify from 'slugify'
 export const strict = false
 import { saveUserData, clearUserData } from '@/utils'
+import defaultImage from '@/assets/default-image.jpg'
 
 export const state = () => ({
   headlines: [],
@@ -12,6 +13,8 @@ export const state = () => ({
   country: 'jp',
   token: '',
   user: null,
+  login_user: '',
+  uid: '',
   headline: null,
   source: ''
 })
@@ -34,6 +37,12 @@ export const mutations = {
   },
   setUser(state, user) {
     state.user = user
+  },
+  login_user(state, user) {
+    state.login_user = user
+  },
+  setUserId(state, uid) {
+    state.uid = uid
   },
   clearToken(state) {
     state.token = ''
@@ -66,6 +75,9 @@ export const mutations = {
  * loadHeadline: each single headlineを取得と同時にコメントも取得する
  */
 export const actions = {
+  login_user({ commit }, user) {
+    commit('login_user', user)
+  },
   async loadHeadlines({ commit },apiUrl) {
     commit('setLoading', true)
     const { articles } = await this.$axios.$get(apiUrl)
@@ -76,6 +88,10 @@ export const actions = {
         // remove: undefined,
         lower: true
       })
+
+      if(!article.urlToImage) {
+        article.urlToImage = defaultImage
+      }
       const headline = { ...article, slug}
       return headline
     })
@@ -204,9 +220,10 @@ export const actions = {
         password: userPayload.password,
         returnSecureToken: userPayload.returnSecureToken
       })
+      console.log('auth', authUserData.expiresIn)
 
       let user
-
+        // userPayload.email ==> userPayload.localIdにやってみた
       if(userPayload.action === 'register') {
         const avatar = `http://gravatar.com/avatar/${ md5(authUserData.email) }?d=identicon`
         user = { email: authUserData.email, avatar}
@@ -215,9 +232,11 @@ export const actions = {
         const loginRef = db.collection('users').doc(userPayload.email)
         const loggedInUser = await loginRef.get()
         user = loggedInUser.data()
+        
       }
       
       commit('setUser', user)
+      // commit('setUserId', authUserData.localId)
       commit('setToken', authUserData.idToken)
       commit('setLoading', false)
       // console.log(authUserData)
@@ -225,7 +244,7 @@ export const actions = {
       saveUserData(authUserData, user)
       
     } catch(error) {
-      console.log(error)
+      console.log(error.message)
       commit('setLoading', false)
     }
   },
@@ -263,6 +282,17 @@ export const getters = {
   },
   user(state) {
     return state.user
+  },
+  login_user(state) {
+    return state.login_user
+  },
+  setUserId(state) {
+    if(state.login_user.localId) {
+      return state.login_user.localId
+    } else {
+      return null
+    }
+   
   },
   headline(state) {
     return state.headline

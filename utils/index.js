@@ -1,5 +1,9 @@
 import Cookie from 'js-cookie'
 
+/*
+*store/users.jsにuserを扱う記述は移行します。
+*/
+
 export const saveUserData = ({ idToken, expiresIn}, {email, avatar }) => {
   const tokenExpiration = Date.now() + expiresIn * 1000
   localStorage.setItem('jwt', idToken)
@@ -14,10 +18,10 @@ export const saveUserData = ({ idToken, expiresIn}, {email, avatar }) => {
 export const getUserFromCookie = req => {
   if (!req.headers.cookie) { return }
 
-  const jwtCookie = req.headers.cookie.split(';').find(c => c.trim().startWith('jwt='))
-  const expiresInCookie = req.headers.cookie.split(';').find(c => c.trim().startWith('expiresIn='))
-  const userCookie = req.headers.cookie.split(';').find(c => c.trim().startWith('user='))
-  const avatarCookie = req.headers.cookie.split(';').find(c => c.trim().startWith('avatar='))
+  const jwtCookie = req.headers.cookie.split(';').find(c => c.trim().startsWith('jwt='))
+  const expiresInCookie = req.headers.cookie.split(';').find(c => c.trim().startsWith('expiresIn='))
+  const userCookie = req.headers.cookie.split(';').find(c => c.trim().startsWith('user='))
+  const avatarCookie = req.headers.cookie.split(';').find(c => c.trim().startsWith('avatar='))
 
   if (!jwtCookie || !expiresInCookie || !userCookie || !avatarCookie) { return }
 

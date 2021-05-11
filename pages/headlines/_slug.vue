@@ -37,11 +37,12 @@
     <md-list class="md-triple-line" style="margin-top: 1em;">
       <md-list-item v-for="comment in headline.comments" :key="comment.id">
         <md-avatar>
+          <!-- 変更したよ -->
           <img :src="comment.user.avatar" :alt="comment.user.username" />
         </md-avatar>
         <div class="md-list-item-text">
           <span>{{ comment.user.username }}</span>
-          <span>{{ comment.publishedAt }}</span>
+          <span>{{ comment.publishedAt | commentTimeToNow}}</span>
           <p>{{ comment.text }}</p>
         </div>
 
@@ -96,7 +97,7 @@ export default {
       // console.log('commentUserData',commentUserData)
       // userからusernameを作成
       commentUserData['username'] = commentUserData['email'].split('@')[0]
-      console.log('commentUserData2',commentUserData)
+      // console.log('commentUserData2',commentUserData)
       return commentUserData
     },
     async likeComment(commentId) {
@@ -111,7 +112,7 @@ export default {
       return this.$store.getters.loading
     },
     user() {
-      return this.$store.getters.user
+      return this.$store.getters['user']
     }
   }
 }

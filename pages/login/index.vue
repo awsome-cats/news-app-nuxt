@@ -7,7 +7,7 @@
       <form @submit.prevent="validateForm">
         <md-card-content>
           <md-field md-clearable　:class="getValidationClass('email')">
-            <label for="email">Email</label>
+            <label for="email">Email test@test.com</label>
             <md-input :disabled="loading"  v-model="form.email" id="email" name="email" autocomplete="email" />
             <!-- Error Handling To Email -->
             <span class="md-error" v-if="!$v.form.email.required">Emailを入力して下さい</span>
@@ -15,7 +15,7 @@
           
           </md-field>
           <md-field :class="getValidationClass('password')">
-            <label for="password">password</label>
+            <label for="password">password 123123</label>
             <md-input :disabled="loading" v-model="form.password" id="password" name="password" autocomplete="password" />
             <!-- Error Handling To Password -->
             <span class="md-error" v-if="!$v.form.password.required">パスワードを入力して下さい</span>
@@ -31,6 +31,12 @@
 
       <md-snackbar :md-active.sync="isAuthenticated">{{form.email}}でログインしました</md-snackbar>
     </md-card>
+    <md-button 
+    class="md-fab md-fab-bottom-right md-fixed md-primary"
+    @click="$router.go(-1)"
+    >
+    <md-icon>arrow_back</md-icon>
+    </md-button>
   </div>
 </template>
 
