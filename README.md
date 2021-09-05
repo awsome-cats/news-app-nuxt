@@ -5,6 +5,8 @@
 ## Build Setup
 
 ``` bash
+node-sass@4.14.1 requires tar@^2.0.0 via node-gyp@3.8.0
+
 # install dependencies
 $ yarn install
 
@@ -17,6 +19,7 @@ $ yarn start
 
 # generate static project
 $ yarn run generate
+
 ```
 
 For detailed explanation on how things work, checkout [Nuxt.js docs](https://nuxtjs.org).
